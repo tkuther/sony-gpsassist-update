@@ -21,7 +21,7 @@ fi
 ERR=0
 
 function run_update {
-  if [[ "$MY_UUIDS" =~ "$ID_FS_UUID" ]]; then
+  if [[ "$SONY_FS_UUIDS" =~ "$ID_FS_UUID" ]]; then
     ${LOGGER_CMD} "Device with known FS UUID added. Mounting ..." 
     mkdir $TMP_MOUNT_DIR
     mount $DEVNAME $TMP_MOUNT_DIR
