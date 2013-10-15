@@ -1,0 +1,69 @@
+#!/bin/bash
+
+## to test environment variables set by udev, uncomment following and plug your card.
+#env > /tmp/udev-env.txt && exit 0
+
+PROG_NAME="`basename $0`"
+TMP_MOUNT_DIR="/tmp/${PROG_NAME}_$$"
+LOGGER_CMD="logger -t $PROG_NAME"
+PROBE_OUT_FILE="${PROG_NAME}_$$_env.txt"
+
+if [[ -r "/etc/`basename $0`.cfg" ]]; then
+  . /etc/`basename $0`.cfg
+else
+  ${LOGGER_CMD} "ERROR: no config file found"
+fi
+
+if [[ -z "$SONY_FS_UUIDS" ]]; then
+  ${LOGGER_CMD} "WARN: no SONY_FS_UUIDS configured, running in probe mode. Plug your SD card and check ID_FS_UUID from /tmp/$PROBE_OUT_FILE"
+  env > /tmp/$PROBE_OUT_FILE
+  exit 0
+fi
+
+ERR=0
+
+function run_update {
+  if [[ "$MY_UUIDS" =~ "$ID_FS_UUID" ]]; then
+    ${LOGGER_CMD} "Device with known FS UUID added. Mounting ..." 
+    mkdir $TMP_MOUNT_DIR
+    mount $DEVNAME $TMP_MOUNT_DIR
+    if [[ $? -ne 0 ]]; then
+      ${LOGGER_CMD} "Mount failed. Exiting."
+      return 5
+    fi
+
+    if [[ -d "${TMP_MOUNT_DIR}/PRIVATE" ]]; then
+      ${LOGGER_CMD} $PROG_NAME "Sony-formatted partition found. Good. Updating GPS-A data now"
+      test -d ${TMP_MOUNT_DIR}/PRIVATE/SONY/GPS || mkdir -p ${TMP_MOUNT_DIR}/PRIVATE/SONY/GPS
+      cd ${TMP_MOUNT_DIR}/PRIVATE/SONY/GPS
+      wget http://control.d-imaging.sony.co.jp/GPS/assistme.dat -O assistme.dat.tmp
+      if [[ $? -ne 0 ]]; then
+        ${LOGGER_CMD} "Failed to download assistme.dat. Exiting."
+	return 10
+      else
+        mv assistme.dat assistme.dat.old
+        mv assistme.dat.tmp assistme.dat
+      fi
+      ${LOGGER_CMD} $PROG_NAME "Update successful."
+      cd ${TMP_MOUNT_DIR}/..
+    else
+      ${LOGGER_CMD} $PROG_NAME "No Sony formatted card. Ignoring."
+    fi
+  else
+      exit 0
+  fi
+}
+
+run_update
+ERR=$?
+if [[ $ERR -ne 5 ]]; then
+  umount $TMP_MOUNT_DIR
+  if [[ $? -ne 0 ]]; then
+    ${LOGGER_CMD} "WARNING: failed to unmount $TMP_MOUNT_DIR"
+    ERR=15
+  else
+    rmdir $TMP_MOUNT_DIR
+  fi
+fi
+
+exit $ERR

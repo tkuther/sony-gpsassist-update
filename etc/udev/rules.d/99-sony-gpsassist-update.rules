@@ -1,0 +1,1 @@
+SUBSYSTEM=="block", ACTION=="add", ENV{DEVTYPE}=="partition", ENV{UDISKS_PARTITION_NUMBER}=="1", RUN="/usr/local/bin/sony-gps-update"
