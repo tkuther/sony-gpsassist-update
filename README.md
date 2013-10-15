@@ -3,7 +3,8 @@ sony-gpsassist-update
 
 Automatically Update GPS Assist data on Linux
 
-= Installation
+Installation
+------------
 $ ./install.sh
 
 This will
@@ -11,6 +12,7 @@ This will
 * copy the .cfg to /etc/
 * copy the udev rules.d file to /etc/udev/rules.d/
 
-= Usage
+Usage
+-----
 Edit SONY_FS_UUIDS in /etc/sony-gpsassist-update.cfg
 
