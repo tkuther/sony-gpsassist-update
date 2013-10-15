@@ -1,8 +1,5 @@
 #!/bin/bash
 
-## to test environment variables set by udev, uncomment following and plug your card.
-#env > /tmp/udev-env.txt && exit 0
-
 PROG_NAME="`basename $0`"
 TMP_MOUNT_DIR="/tmp/${PROG_NAME}_$$"
 LOGGER_CMD="logger -t $PROG_NAME"
@@ -12,6 +9,7 @@ if [[ -r "/etc/`basename $0`.cfg" ]]; then
   . /etc/`basename $0`.cfg
 else
   ${LOGGER_CMD} "ERROR: no config file found"
+  exit 1
 fi
 
 if [[ -z "$SONY_FS_UUIDS" ]]; then
